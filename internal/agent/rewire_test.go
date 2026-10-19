@@ -28,6 +28,11 @@ func filesWith(home, s string) []string {
 		if err != nil || e.IsDir() {
 			return nil
 		}
+		// UOS AI's database holds the gateway's address among its bytes,
+		// but it isn't a text config: rewriting it as one corrupts it.
+		if b, _ := os.ReadFile(p); len(b) >= 15 && string(b[:15]) == "SQLite format 3" {
+			return nil
+		}
 		if b, _ := os.ReadFile(p); strings.Contains(string(b), s) {
 			out = append(out, p)
 		}

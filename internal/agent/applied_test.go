@@ -158,6 +158,7 @@ func TestDriftUnwiredEveryAgent(t *testing.T) {
 	// AstrBot is connected once it has written its settings
 	os.MkdirAll(filepath.Join(home, ".astrbot", "data"), 0o755)
 	os.WriteFile(filepath.Join(home, ".astrbot", "data", "cmd_config.json"), []byte(astrbotConfig), 0o644)
+	uosaiSetup(t, home) // UOS AI keeps its models in its SQLite database
 	for _, a := range All() {
 		// agy's gateway is in the command that starts it, in no file (its
 		// Check is TestAgy's)
@@ -203,6 +204,12 @@ func TestDriftUnwiredEveryAgent(t *testing.T) {
 				if err != nil || e.IsDir() {
 					return nil
 				}
+				// UOS AI keeps the URL in its SQLite database; rewriting
+				// its bytes shifts the file and corrupts it. uosaiRepoint
+				// below changes it the way the app does.
+				if p == uosaiDB(home) {
+					return nil
+				}
 				b, _ := os.ReadFile(p)
 				if s := strings.ReplaceAll(string(b), gateway.URL(), "http://127.0.0.1:9"); s != string(b) {
 					os.WriteFile(p, []byte(s), 0o644)
@@ -211,6 +218,7 @@ func TestDriftUnwiredEveryAgent(t *testing.T) {
 				return nil
 			})
 			n += almaApp.repoint(gateway.URL(), "http://127.0.0.1:9")
+			n += uosaiRepoint(a, home, gateway.URL(), "http://127.0.0.1:9")
 			if n == 0 {
 				t.Fatal("no file holds the gateway's URL")
 			}

@@ -104,6 +104,9 @@ func reverseProxyIsStillMagpie(t *testing.T, proxy string) {
 		b, _ := os.ReadFile(p)
 		os.WriteFile(p, []byte(strings.ReplaceAll(string(b), "http://127.0.0.1:3591", proxy)), 0o644)
 	}
+	for _, a := range agents {
+		uosaiRepoint(a, home, "http://127.0.0.1:3591", proxy)
+	}
 
 	asked := fakeMagpieAt(t, map[string]bool{proxy: true})
 	for _, a := range agents {
